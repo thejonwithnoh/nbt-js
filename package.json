@@ -1,0 +1,23 @@
+{
+	"name": "nbt-js",
+	"version": "0.0.0",
+	"description": "An NBT parser written in JavaScript for Node.js.",
+	"main": "nbt-js.js",
+	"repository":
+	{
+		"type": "git",
+		"url": "git://github.com/thejonwithnoh/nbt-js.git"
+	},
+	"keywords":
+	[
+		"nbt",
+		"minecraft"
+	],
+	"author": "Jonathan Faulch",
+	"license": "MIT",
+	"bugs":
+	{
+		"url": "https://github.com/thejonwithnoh/nbt-js/issues"
+	},
+	"homepage": "https://github.com/thejonwithnoh/nbt-js#readme"
+}
