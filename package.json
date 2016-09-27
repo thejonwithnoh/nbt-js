@@ -1,6 +1,6 @@
 {
 	"name": "nbt-js",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": "An NBT parser written in JavaScript for Node.js.",
 	"main": "nbt-js.js",
 	"repository":

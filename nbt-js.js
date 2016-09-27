@@ -31,6 +31,12 @@ types.forEach(function(typeData, typeIndex)
 	types[type.value] = types[type.name] = type;
 });
 
+types.fromSchema = function(schema)
+{
+	return typeof schema === 'string' ? types[schema] :
+		(Array.isArray(schema) ? types.list : types.compound);
+};
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\
  * Reader                                                                      *
 \* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -107,4 +113,63 @@ exports.read = function(buffer)
 	var result = { schema: {}, payload: {} };
 	read(new Reader(buffer), result);
 	return result;
+};
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\
+ * Writer                                                                      *
+\* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+var write = exports.write = function()
+{
+	return write[types.compound.name].apply(this, arguments);
+};
+
+types.forEach(function(type)
+{
+	switch(type.structure)
+	{
+		case 'word':
+			write[type.name] = function(value)
+			{
+				var buffer = new Buffer(type.size);
+				buffer['write' + type.format](value);
+				return buffer;
+			};
+			break;
+		case 'list':
+			var isList = type === types.list;
+			write[type.name] = function(value, schema)
+			{
+				var typeName = isList ? types.fromSchema(schema[0]).name : types[schema].format;
+				var buffers = [];
+				if (isList) { buffers.push(write.byte(types[typeName].value)); }
+				if (!type.size) { buffers.push(write.int(value.length)); }
+				value.forEach(function(element)
+				{
+					buffers.push(write[typeName](element, schema[0]));
+				});
+				return Buffer.concat(buffers);
+			};
+			break;
+	}
+});
+
+write[types.string.name] = function(value)
+{
+	var buffer = new Buffer(value, 'utf8');
+	return Buffer.concat([write.short(buffer.length), buffer]);
+};
+
+write[types.compound.name] = function(value, schema)
+{
+	var buffers = [];
+	for (var name in value)
+	{
+		var type = types.fromSchema(schema[name]);
+		buffers.push(write.byte(type.value));
+		buffers.push(write.string(name));
+		buffers.push(write[type.name](value[name], schema[name]));
+	}
+	buffers.push(write.byte(types.end.value));
+	return Buffer.concat(buffers);
 };
