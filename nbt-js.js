@@ -1,5 +1,3 @@
-var nbt = exports;
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\
  * Types                                                                       *
 \* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -7,7 +5,7 @@ var nbt = exports;
 var typeFields =
 	['name'     , 'structure', 'format'  , 'size'];
 	
-nbt.types =
+var types = exports.types =
 [
 	['end'      , null       , null      , null  ],
 	['byte'     , 'word'     , 'Int8'    , 1     ],
@@ -23,21 +21,21 @@ nbt.types =
 	['intArray' , 'list'     , 'int'     , null  ]
 ];
 
-nbt.types.forEach(function(typeData, typeIndex)
+types.forEach(function(typeData, typeIndex)
 {
 	var type = { value: typeIndex };
 	typeFields.forEach(function(propertyName, propertyIndex)
 	{
 		type[propertyName] = typeData[propertyIndex];
 	});
-	nbt.types[type.value] = nbt.types[type.name] = type;
+	types[type.value] = types[type.name] = type;
 });
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\
  * Reader                                                                      *
 \* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-nbt.Reader = function(buffer)
+var Reader = exports.Reader = function(buffer)
 {
 	this.buffer = buffer;
 	this.offset = 0;
@@ -45,8 +43,8 @@ nbt.Reader = function(buffer)
 
 function read(reader, object)
 {
-	var type = nbt.types[reader.byte().payload];
-	if (type !== nbt.types.end)
+	var type = types[reader.byte().payload];
+	if (type !== types.end)
 	{
 		var name = reader.string().payload;
 		var result = reader[type.name]();
@@ -56,12 +54,12 @@ function read(reader, object)
 	return type;
 }
 
-nbt.types.forEach(function(type)
+types.forEach(function(type)
 {
 	switch(type.structure)
 	{
 		case 'word':
-			nbt.Reader.prototype[type.name] = function()
+			Reader.prototype[type.name] = function()
 			{
 				var word = this.buffer['read' + type.format](this.offset);
 				this.offset += type.size;
@@ -69,10 +67,10 @@ nbt.types.forEach(function(type)
 			};
 			break;
 		case 'list':
-			var isList = type === nbt.types.list;
-			nbt.Reader.prototype[type.name] = function()
+			var isList = type === types.list;
+			Reader.prototype[type.name] = function()
 			{
-				var typeName = type.format || nbt.types[this.byte().payload].name;
+				var typeName = type.format || types[this.byte().payload].name;
 				var result = { schema: isList ? [ typeName ] : type.name, payload: [] };
 				var length = type.size || this.int().payload;
 				for (var i = 0; i < length; i++)
@@ -87,26 +85,26 @@ nbt.types.forEach(function(type)
 	}
 });
 
-nbt.Reader.prototype[nbt.types.string.name] = function()
+Reader.prototype[types.string.name] = function()
 {
 	var length = this.short().payload;
 	return new Object
 	({
-		schema: nbt.types.string.name,
+		schema: types.string.name,
 		payload: this.buffer.toString('utf8', this.offset, this.offset += length)
 	});
 };
 
-nbt.Reader.prototype[nbt.types.compound.name] = function()
+Reader.prototype[types.compound.name] = function()
 {
 	var result = { schema: {}, payload: {} };
-	while (read(this, result) !== nbt.types.end);
+	while (read(this, result) !== types.end);
 	return result;
 };
 
-nbt.read = function(buffer)
+exports.read = function(buffer)
 {
 	var result = { schema: {}, payload: {} };
-	read(new nbt.Reader(buffer), result);
+	read(new Reader(buffer), result);
 	return result;
 };
