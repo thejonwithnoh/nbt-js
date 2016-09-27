@@ -72,8 +72,8 @@ nbt.types.forEach(function(type)
 			var isList = type === nbt.types.list;
 			nbt.Reader.prototype[type.name] = function()
 			{
-				var result = { schema: isList ? [] : type.name, payload: [] };
 				var typeName = type.format || nbt.types[this.byte().payload].name;
+				var result = { schema: isList ? [ typeName ] : type.name, payload: [] };
 				var length = type.size || this.int().payload;
 				for (var i = 0; i < length; i++)
 				{
