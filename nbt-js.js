@@ -3,21 +3,21 @@
 \* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 const typeFields =
-	['name'     , 'structure', 'format'  , 'size'];
+	['name'     , 'structure', 'format'    , 'size'];
 
 const types = exports.types = [
-	['end'      , null       , null      , null  ],
-	['byte'     , 'word'     , 'Int8'    , 1     ],
-	['short'    , 'word'     , 'Int16BE' , 2     ],
-	['int'      , 'word'     , 'Int32BE' , 4     ],
-	['long'     , 'list'     , 'int'     , 2     ],
-	['float'    , 'word'     , 'FloatBE' , 4     ],
-	['double'   , 'word'     , 'DoubleBE', 8     ],
-	['byteArray', 'list'     , 'byte'    , null  ],
-	['string'   , null       , null      , null  ],
-	['list'     , 'list'     , null      , null  ],
-	['compound' , null       , null      , null  ],
-	['intArray' , 'list'     , 'int'     , null  ]
+	['end'      , null       , null        , null  ],
+	['byte'     , 'word'     , 'Int8'      , 1     ],
+	['short'    , 'word'     , 'Int16BE'   , 2     ],
+	['int'      , 'word'     , 'Int32BE'   , 4     ],
+	['long'     , 'word'     , 'BigInt64BE', 8     ],
+	['float'    , 'word'     , 'FloatBE'   , 4     ],
+	['double'   , 'word'     , 'DoubleBE'  , 8     ],
+	['byteArray', 'list'     , 'byte'      , null  ],
+	['string'   , null       , null        , null  ],
+	['list'     , 'list'     , null        , null  ],
+	['compound' , null       , null        , null  ],
+	['intArray' , 'list'     , 'int'       , null  ]
 ];
 
 types.forEach((typeData, typeIndex) => {
@@ -63,7 +63,7 @@ types.forEach(type => {
 			Reader.prototype[type.name] = function () {
 				const typeName = type.format || types[this.byte().payload].name;
 				const result = {schema: isList ? [typeName] : type.name, payload: []};
-				const length = type.size || this.int().payload;
+				const length = this.int().payload;
 				for (let i = 0; i < length; i++) {
 					const element = this[typeName]();
 					if (isList) {
@@ -121,9 +121,7 @@ types.forEach(type => {
 				if (isList) {
 					buffers.push(write.byte(types[typeName].value));
 				}
-				if (!type.size) {
-					buffers.push(write.int(value.length));
-				}
+				buffers.push(write.int(value.length));
 				value.forEach(element => buffers.push(write[typeName](element, schema[0])));
 				return Buffer.concat(buffers);
 			};
