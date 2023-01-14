@@ -17,7 +17,8 @@ const types = exports.types = [
 	['string'   , null       , null        , null  ],
 	['list'     , 'list'     , null        , null  ],
 	['compound' , null       , null        , null  ],
-	['intArray' , 'list'     , 'int'       , null  ]
+	['intArray' , 'list'     , 'int'       , null  ],
+	['longArray', 'list'     , 'long'      , null  ]
 ];
 
 types.forEach((typeData, typeIndex) => {
